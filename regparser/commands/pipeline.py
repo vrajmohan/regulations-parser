@@ -1,4 +1,5 @@
 import click
+import pyparsing
 
 from regparser.commands.annual_editions import annual_editions
 from regparser.commands.current_version import current_version
@@ -31,13 +32,16 @@ def pipeline(ctx, cfr_title, cfr_part, output, only_latest, xml_ttl):
     * a directory prefixed with "git://". This will export to a git
       repository"""
     params = {'cfr_title': cfr_title, 'cfr_part': cfr_part}
-    ctx.invoke(sync_xml, xml_ttl=xml_ttl)
-    if only_latest:
-        ctx.invoke(current_version, **params)
-    else:
-        ctx.invoke(versions, **params)
-        ctx.invoke(annual_editions, **params)
-        ctx.invoke(fill_with_rules, **params)
-    ctx.invoke(layers, **params)
-    ctx.invoke(diffs, **params)
-    ctx.invoke(write_to, output=output, **params)
+    try:
+        ctx.invoke(sync_xml, xml_ttl=xml_ttl)
+        if only_latest:
+            ctx.invoke(current_version, **params)
+        else:
+            ctx.invoke(versions, **params)
+            ctx.invoke(annual_editions, **params)
+            ctx.invoke(fill_with_rules, **params)
+        ctx.invoke(layers, **params)
+        ctx.invoke(diffs, **params)
+        ctx.invoke(write_to, output=output, **params)
+    except pyparsing.ParseException as exc:
+        print(u"{e}:\n'{e.line}'".format(e=exc))
